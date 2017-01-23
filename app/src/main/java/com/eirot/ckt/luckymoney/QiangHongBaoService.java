@@ -2,10 +2,8 @@ package com.eirot.ckt.luckymoney;
 
 import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.AccessibilityServiceInfo;
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Build;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityManager;
@@ -91,9 +89,6 @@ public class QiangHongBaoService extends AccessibilityService {
 
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
-        if(BuildConfig.DEBUG) {
-            Log.d(TAG, "事件--->" + event);
-        }
         String pkn = String.valueOf(event.getPackageName());
         if(mAccessbilityJobs != null && !mAccessbilityJobs.isEmpty()) {
 
@@ -109,18 +104,16 @@ public class QiangHongBaoService extends AccessibilityService {
         return mConfig;
     }
 
-    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
-    public static void goHome() {
+    public static void goBack() {
         if(service != null) {
-            Log.d("Eirot","Now I'm go back home");
-            service.performGlobalAction(AccessibilityService.GLOBAL_ACTION_HOME);
+            Log.d("Eirot","Now I'm go back");
+            service.performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK);
         }
     }
 
     /**
      * 判断当前服务是否正在运行
      * */
-    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
     public static boolean isRunning() {
         if(service == null) {
             return false;

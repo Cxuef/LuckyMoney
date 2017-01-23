@@ -1,8 +1,8 @@
 <resources>
     <string name="app_name">LuckyMoney</string>
     <string name="main_name">LuckyMoney</string>
-    <string name="accessibility_description">启动抢红包服务，仅支持QQ和微信。注意此功能只是在当红包来了的时候，帮助你自动点击，解决手慢的问题。要想更好的抢红包，有一下几个要点：
-        1.足够强大的网速，只是前提;  2.手机性能要好，可以试着关闭不必要的窗体动画(设置模块->开发者选项->窗口动画缩放、过渡动画缩放、动画程序时长缩放 这三项都关闭);  3.别抢太快了，太多了怕被封号 O(∩_∩)O哈哈~</string>
+    <string name="accessibility_description">启动抢红包服务，仅支持微信。 \n\n注意此功能只是在当红包来了的时候，帮助你自动点击，解决手慢的问题。要想更好的抢红包，有一下几个要点： \n\n
+        1.足够强大的网速，只是前提; \n\n 2.手机性能要好，可以试着关闭不必要的窗体动画(设置模块->开发者选项->窗口动画缩放、过渡动画缩放、动画程序时长缩放 这三项都关闭); \n\n 3.别抢太快了，太多了怕被封号 O(∩_∩)O哈哈~</string>
     <string name="service_name">LuckyMoney抢红包</string>
     <string name="open_service_title">需开启辅助服务才能正常使用</string>
     <string name="open_service_button">打开辅助服务</string>

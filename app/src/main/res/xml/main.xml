@@ -16,15 +16,6 @@
             android:dialogTitle="设置延迟时间(毫秒)"
             android:hint="单位毫秒(1秒=1000毫秒)"/>
 
-        <ListPreference
-            android:title="打开红包后"
-            android:defaultValue="0"
-            android:summary="拆红包"
-            android:key="KEY_WECHAT_AFTER_OPEN_HONGBAO"
-            android:dialogTitle="设置打开红包后要执行的事件"
-            android:entries="@array/wechat_after_open_settings_titles"
-            android:entryValues="@array/wechat_after_open_settings_values"/>
-
         <Preference
             android:key="wechat_pay_me"
             android:layout="@layout/wechat_pay_view"/>

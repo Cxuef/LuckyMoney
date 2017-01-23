@@ -1,7 +1,5 @@
 package com.eirot.ckt.luckymoney.job;
 
-import android.accessibilityservice.AccessibilityService;
-import android.annotation.TargetApi;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
@@ -10,16 +8,11 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
-import android.widget.LinearLayout;
 
-import com.eirot.ckt.luckymoney.BuildConfig;
-import com.eirot.ckt.luckymoney.Config;
 import com.eirot.ckt.luckymoney.QiangHongBaoService;
 
 import java.util.List;
@@ -28,16 +21,24 @@ public class WechatAccessbilityJob extends BaseAccessbilityJob {
 
     private static final String TAG = "WechatAccessbilityJob";
 
-    /** 微信的包名*/
+    //微信的包名
     private static final String WECHAT_PACKAGENAME = "com.tencent.mm";
+
+    // 微信Open
+    private static final String WECHAT654_OPEN_ID = "com.tencent.mm:id/bi3";
+
+    private static final String WECHAT654_GET_ID = "com.tencent.mm:id/a5u";
+
+    private static final String WECHAT654_LuckyMoneyReceiveUI = "com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyReceiveUI";
+    private static final String WECHAT654_LuckyMoneyDetailUI = "com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyDetailUI";
+    private static final String WECHAT654_LauncherUI = "com.tencent.mm.ui.LauncherUI";
 
     /** 红包消息的关键字*/
     private static final String HONGBAO_TEXT_KEY = "[微信红包]";
 
-    /** 不能再使用文字匹配的最小版本号 */
-    private static final int USE_ID_MIN_VERSION = 700;// 6.3.8 对应code为680,6.3.9对应code为700
-
-    private boolean isFirstChecked ;
+    private boolean isFirstChecked;
+    private boolean isFistBack;
+    private int sDelayTime;
     private PackageInfo mWechatPackageInfo = null;
     private Handler mHandler = null;
 
@@ -54,6 +55,7 @@ public class WechatAccessbilityJob extends BaseAccessbilityJob {
         super.onCreateJob(service);
 
         updatePackageInfo();
+        sDelayTime = getConfig().getWechatOpenDelayTime();
 
         IntentFilter filter = new IntentFilter();
         filter.addDataScheme("package");
@@ -124,15 +126,17 @@ public class WechatAccessbilityJob extends BaseAccessbilityJob {
     }
 
     private void openHongBao(AccessibilityEvent event) {
-        if("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyReceiveUI".equals(event.getClassName())) {
+        if(WECHAT654_LuckyMoneyReceiveUI.equals(event.getClassName())) {
             //点中了红包，下一步就是去拆红包
             handleLuckyMoneyReceive();
-        } else if("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyDetailUI".equals(event.getClassName())) {
-            //拆完红包后看详细的纪录界面
-            Log.d(TAG, "----> 这是红包详情页面！");
-            //查看完成后，模拟点击Home键，返回lancher桌面
-            //QiangHongBaoService.goHome();
-        } else if("com.tencent.mm.ui.LauncherUI".equals(event.getClassName())) {
+            isFistBack = true;
+        } else if(WECHAT654_LuckyMoneyDetailUI.equals(event.getClassName())) {
+            if(isFistBack) {
+                //拆完红包后看详细的纪录界面,查看完成后返回
+                QiangHongBaoService.goBack();
+                isFistBack = false;
+            }
+        } if(WECHAT654_LauncherUI.equals(event.getClassName())) {
             //如果用户已经在微信聊天界面,必须先手动点击中红包。但拆红包可以模拟
             handleChatListHongBao();
         }
@@ -142,40 +146,25 @@ public class WechatAccessbilityJob extends BaseAccessbilityJob {
     private void handleLuckyMoneyReceive() {
         AccessibilityNodeInfo nodeInfo = getService().getRootInActiveWindow();
         if(nodeInfo == null) {
-            Log.w(TAG, "rootWindow为空");
             return;
         }
 
         AccessibilityNodeInfo targetNode = null;
-
         List<AccessibilityNodeInfo> list = null;
-        int event = getConfig().getWechatAfterOpenHongBaoEvent();
-        if(event == Config.WX_AFTER_OPEN_HONGBAO) { //拆红包
-            if (getWechatVersion() < USE_ID_MIN_VERSION) {
-                list = nodeInfo.findAccessibilityNodeInfosByText("拆红包");
-            } else {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                    list = nodeInfo.findAccessibilityNodeInfosByViewId("com.tencent.mm:id/b2c");
-                }
-                if(list == null || list.isEmpty()) {
-                    List<AccessibilityNodeInfo> l = nodeInfo.findAccessibilityNodeInfosByText("给你发了一个红包");
-                    if(l != null && !l.isEmpty()) {
-                        AccessibilityNodeInfo p = l.get(0).getParent();
-                        if(p != null) {
-                            for (int i = 0; i < p.getChildCount(); i++) {
-                                AccessibilityNodeInfo node = p.getChild(i);
-                                if("android.widget.Button".equals(node.getClassName())) {
-                                    targetNode = node;
-                                    break;
-                                }
-                            }
+        list = nodeInfo.findAccessibilityNodeInfosByViewId(WECHAT654_OPEN_ID);
+        if (list == null || list.isEmpty()) {
+            List<AccessibilityNodeInfo> l = nodeInfo.findAccessibilityNodeInfosByText("给你发了一个红包");
+            if (l != null && !l.isEmpty()) {
+                AccessibilityNodeInfo p = l.get(0).getParent();
+                if (p != null) {
+                    for (int i = 0; i < p.getChildCount(); i++) {
+                        AccessibilityNodeInfo node = p.getChild(i);
+                        if ("android.widget.Button".equals(node.getClassName())) {
+                            targetNode = node;
+                            break;
                         }
                     }
                 }
-            }
-        } else if(event == Config.WX_AFTER_OPEN_SEE) { //看一看
-            if(getWechatVersion() < USE_ID_MIN_VERSION) { //低版本才有 看大家手气的功能
-                list = nodeInfo.findAccessibilityNodeInfosByText("看看大家的手气");
             }
         }
 
@@ -185,8 +174,7 @@ public class WechatAccessbilityJob extends BaseAccessbilityJob {
 
         if(targetNode != null) {
             final AccessibilityNodeInfo n = targetNode;
-            long sDelayTime = getConfig().getWechatOpenDelayTime();
-            if(sDelayTime != 0) {
+            if(sDelayTime >= 0) {
                 getHandler().postDelayed(new Runnable() {
                     @Override
                     public void run() {
@@ -201,16 +189,15 @@ public class WechatAccessbilityJob extends BaseAccessbilityJob {
 
     /**
      * 收到聊天里的红包
-     * */
-    @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
+     */
     private void handleChatListHongBao() {
         AccessibilityNodeInfo nodeInfo = getService().getRootInActiveWindow();
         if(nodeInfo == null) {
-            Log.w(TAG, "rootWindow为空");
             return;
         }
 
         List<AccessibilityNodeInfo> list = nodeInfo.findAccessibilityNodeInfosByText("领取红包");
+        //List<AccessibilityNodeInfo> list = nodeInfo.findAccessibilityNodeInfosByViewId(WECHAT654_GET_ID);
 
         if(list != null && list.isEmpty()) {
             // 从消息列表查找红包
@@ -220,20 +207,16 @@ public class WechatAccessbilityJob extends BaseAccessbilityJob {
                 return;
             }
 
-            for(AccessibilityNodeInfo n : list) {
-                if(BuildConfig.DEBUG) {
-                    Log.i(TAG, "-->微信红包:" + n);
+            for(AccessibilityNodeInfo aNodeInfo : list) {
+                if(aNodeInfo.isClickable()) {
+                    aNodeInfo.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                    break;
                 }
-                n.performAction(AccessibilityNodeInfo.ACTION_CLICK);
-                break;
             }
         } else if(list != null) {
             //最新的红包领起
             for(int i = list.size() - 1; i >= 0; i --) {
                 AccessibilityNodeInfo parent = list.get(i).getParent();
-                if(BuildConfig.DEBUG) {
-                    Log.i(TAG, "-->领取红包:" + parent);
-                }
                 if(parent != null) {
                     if (isFirstChecked){
                         parent.performAction(AccessibilityNodeInfo.ACTION_CLICK);

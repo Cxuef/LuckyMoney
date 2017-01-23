@@ -6,25 +6,19 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.media.Image;
 import android.os.Bundle;
 import android.preference.EditTextPreference;
-import android.preference.PreferenceScreen;
-import android.preference.SwitchPreference;
-import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
+import android.preference.PreferenceScreen;
+import android.preference.SwitchPreference;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.Toast;
 import android.view.View.OnLongClickListener;
+import android.widget.Toast;
 
 /**
  * Created by Eirot Chen on 2016/2/3.
@@ -208,20 +202,6 @@ public class LuckyMoneyActivity extends BaseActivity {
                     return true;
                 }
             });
-
-            //配置打开红包后的动作
-            final ListPreference wxAfterOpenPre = (ListPreference) findPreference(Config.KEY_WECHAT_AFTER_OPEN_HONGBAO);
-            wxAfterOpenPre.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-                @Override
-                public boolean onPreferenceChange(Preference preference, Object newValue) {
-                    int value = Integer.parseInt(String.valueOf(newValue));
-                    preference.setSummary(wxAfterOpenPre.getEntries()[value]);
-                    return true;
-                }
-            });
-
-            //int value = Integer.parseInt(wxAfterOpenPre.getValue());
-            //wxAfterOpenPre.setSummary(wxAfterOpenPre.getEntries()[value]);
 
             final EditTextPreference delayEditTextPre = (EditTextPreference) findPreference(Config.KEY_WECHAT_DELAY_TIME);
             delayEditTextPre.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
