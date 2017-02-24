@@ -43,7 +43,9 @@ public class Config {
         String result = preferences.getString(KEY_WECHAT_DELAY_TIME, String.valueOf(defaultValue));
         try {
             return Integer.parseInt(result);
-        } catch (Exception e) {}
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return defaultValue;
     }
 }

@@ -27,6 +27,7 @@ public class WechatAccessbilityJob extends BaseAccessbilityJob {
     // 微信Open
     private static final String WECHAT654_OPEN_ID = "com.tencent.mm:id/bi3";
 
+    // 领取红包get
     private static final String WECHAT654_GET_ID = "com.tencent.mm:id/a5u";
 
     private static final String WECHAT654_LuckyMoneyReceiveUI = "com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyReceiveUI";
@@ -75,7 +76,6 @@ public class WechatAccessbilityJob extends BaseAccessbilityJob {
 
     @Override
     public boolean isEnable() {
-
         return getConfig().isEnableWechat();
     }
 
@@ -107,7 +107,10 @@ public class WechatAccessbilityJob extends BaseAccessbilityJob {
         }
     }
 
-    /** 打开通知栏消息*/
+    /**
+     *  1.打开通知栏消息
+     *  @param event
+     */
     private void openNotify(AccessibilityEvent event) {
         if(event.getParcelableData() == null || !(event.getParcelableData() instanceof Notification)) {
             return;
@@ -125,6 +128,10 @@ public class WechatAccessbilityJob extends BaseAccessbilityJob {
         }
     }
 
+    /**
+     * 2. openHongBao
+     * @param event
+     */
     private void openHongBao(AccessibilityEvent event) {
         if(WECHAT654_LuckyMoneyReceiveUI.equals(event.getClassName())) {
             //点中了红包，下一步就是去拆红包
@@ -142,53 +149,8 @@ public class WechatAccessbilityJob extends BaseAccessbilityJob {
         }
     }
 
-    /**点击聊天里的红包后，显示的界面(我们需要查找到拆红包的onClick事件)*/
-    private void handleLuckyMoneyReceive() {
-        AccessibilityNodeInfo nodeInfo = getService().getRootInActiveWindow();
-        if(nodeInfo == null) {
-            return;
-        }
-
-        AccessibilityNodeInfo targetNode = null;
-        List<AccessibilityNodeInfo> list = null;
-        list = nodeInfo.findAccessibilityNodeInfosByViewId(WECHAT654_OPEN_ID);
-        if (list == null || list.isEmpty()) {
-            List<AccessibilityNodeInfo> l = nodeInfo.findAccessibilityNodeInfosByText("给你发了一个红包");
-            if (l != null && !l.isEmpty()) {
-                AccessibilityNodeInfo p = l.get(0).getParent();
-                if (p != null) {
-                    for (int i = 0; i < p.getChildCount(); i++) {
-                        AccessibilityNodeInfo node = p.getChild(i);
-                        if ("android.widget.Button".equals(node.getClassName())) {
-                            targetNode = node;
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-
-        if(list != null && !list.isEmpty()) {
-            targetNode = list.get(0);
-        }
-
-        if(targetNode != null) {
-            final AccessibilityNodeInfo n = targetNode;
-            if(sDelayTime >= 0) {
-                getHandler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        n.performAction(AccessibilityNodeInfo.ACTION_CLICK);
-                    }
-                }, sDelayTime);
-            } else {
-                n.performAction(AccessibilityNodeInfo.ACTION_CLICK);
-            }
-        }
-    }
-
     /**
-     * 收到聊天里的红包
+     * 3.收到聊天里的红包
      */
     private void handleChatListHongBao() {
         AccessibilityNodeInfo nodeInfo = getService().getRootInActiveWindow();
@@ -196,35 +158,48 @@ public class WechatAccessbilityJob extends BaseAccessbilityJob {
             return;
         }
 
-        List<AccessibilityNodeInfo> list = nodeInfo.findAccessibilityNodeInfosByText("领取红包");
-        //List<AccessibilityNodeInfo> list = nodeInfo.findAccessibilityNodeInfosByViewId(WECHAT654_GET_ID);
-
-        if(list != null && list.isEmpty()) {
-            // 从消息列表查找红包
-            list = nodeInfo.findAccessibilityNodeInfosByText("[微信红包]");
-
-            if(list == null || list.isEmpty()) {
-                return;
-            }
-
-            for(AccessibilityNodeInfo aNodeInfo : list) {
-                if(aNodeInfo.isClickable()) {
-                    aNodeInfo.performAction(AccessibilityNodeInfo.ACTION_CLICK);
-                    break;
-                }
-            }
-        } else if(list != null) {
+        List<AccessibilityNodeInfo> list = nodeInfo.findAccessibilityNodeInfosByViewId(WECHAT654_GET_ID);
+        if(list != null) {
             //最新的红包领起
             for(int i = list.size() - 1; i >= 0; i --) {
                 AccessibilityNodeInfo parent = list.get(i).getParent();
-                if(parent != null) {
+                boolean isClick = parent.isClickable();
+                if(parent != null && isClick) {
                     if (isFirstChecked){
                         parent.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                        parent.recycle();
                         isFirstChecked = false;
                     }
                     break;
                 }
             }
+        }
+    }
+
+    /**
+     * 4.点击聊天里的红包后，显示的界面(我们需要查找到拆红包的onClick事件)
+     */
+    private void handleLuckyMoneyReceive() {
+        AccessibilityNodeInfo nodeInfo = getService().getRootInActiveWindow();
+        if(nodeInfo == null) {
+            return;
+        }
+
+        List<AccessibilityNodeInfo> list = nodeInfo.findAccessibilityNodeInfosByViewId(WECHAT654_OPEN_ID);
+
+        if(list != null && !list.isEmpty()) {
+            final AccessibilityNodeInfo targetNode = list.get(0);
+            if(sDelayTime > 0) {
+                getHandler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        targetNode.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                    }
+                }, sDelayTime);
+            } else {
+                targetNode.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+            }
+
         }
     }
 

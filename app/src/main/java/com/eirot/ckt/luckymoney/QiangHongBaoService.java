@@ -104,6 +104,9 @@ public class QiangHongBaoService extends AccessibilityService {
         return mConfig;
     }
 
+    /**
+     * 5. go back when traped lucky money
+     */
     public static void goBack() {
         if(service != null) {
             Log.d("Eirot","Now I'm go back");
@@ -113,7 +116,7 @@ public class QiangHongBaoService extends AccessibilityService {
 
     /**
      * 判断当前服务是否正在运行
-     * */
+     */
     public static boolean isRunning() {
         if(service == null) {
             return false;
