@@ -1,26 +1,67 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 23
-    buildToolsVersion "23.0.1"
+    signingConfigs {
+    }
+    compileSdkVersion 26
+    buildToolsVersion "26.0.2"
 
     defaultConfig {
         applicationId "com.eirot.ckt.luckymoney"
         minSdkVersion 21
-        targetSdkVersion 23
+        targetSdkVersion 26
         versionCode 1
         versionName "1.0"
     }
+
+    applicationVariants.all { variant ->
+        variant.outputs.all {
+            if (outputFileName.endsWith('-release.apk')) {
+                outputFileName = outputFileName.replace(outputFileName, "LuckyMoney" + "_" + variant.versionName + ".apk")
+            } else if (outputFileName.endsWith('-debug.apk')) {
+                outputFileName = outputFileName.replace(outputFileName, "LuckyMoney-debug" + "_" + variant.versionName + ".apk")
+            }
+        }
+    }
+
+    signingConfigs{
+        myConfig{
+            storeFile file("/home/eirot/AndroidStudioProjects/LuckyMoney/luckymoney.jks")
+            storePassword "android"
+            keyAlias "luckymoney"
+            keyPassword "android"
+        }
+    }
+
     buildTypes {
+        debug {
+            applicationIdSuffix ".debug"
+            minifyEnabled false
+            signingConfig signingConfigs.myConfig
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
         release {
             minifyEnabled false
+            signingConfig signingConfigs.myConfig
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-}
 
-dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    testCompile 'junit:junit:4.12'
-    compile 'com.android.support:appcompat-v7:23.2.1'
+    lintOptions {
+        abortOnError false
+        disable "ResourceType"
+        disable 'MissingTranslation'
+        disable 'ExtraTranslation'
+    }
+
+    compileOptions {
+        sourceCompatibility 1.8
+        targetCompatibility 1.8
+    }
+
+    dependencies {
+        compile fileTree(dir: 'libs', include: ['*.jar'])
+        testCompile 'junit:junit:4.12'
+        compile 'com.android.support:appcompat-v7:26.0.2'
+    }
 }
